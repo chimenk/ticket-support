@@ -7,9 +7,24 @@ use App\Http\Requests;
 use App\Category;
 use App\Ticket;
 use Auth;
+use Illuminate\Support\Facades\Mail;
 
 class TicketsController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+    
+    public function index()
+    {
+        $tickets = Ticket::paginate(10);
+
+        $categories = Category::all();
+
+        return view('tickets.index', compact('tickets', 'categories'));
+    }
+
     public function create()
     {
         $categories = Category::all();
@@ -39,7 +54,7 @@ class TicketsController extends Controller
         $ticket->save();
 
         // Send mail to user inform about this created ticket
-        Mail::to(Auth::user()->email)->send(new TicketCreated($ticket));
+        // Mail::to(Auth::user()->email)->send(new TicketCreated($ticket));
 
         return redirect()->back()->with('status', 'A ticket with ID: #$ticket->ticket_id has been opened.');
     }
@@ -61,5 +76,20 @@ class TicketsController extends Controller
         $category = $ticket->category;
 
         return view('tickets.show', compact('ticket', 'category', 'comments'));
+    }
+
+    public function close($ticket_id)
+    {
+        $ticket = Ticket::where('ticket_id', $ticket_id)->firstOrFail();
+
+        $ticket->status = 'Closed';
+
+        $ticket->save();
+
+        $ticketOwner = $ticket->user;
+
+        // Send notification email to owner as the ticket closed -> $ticketOwner
+
+        return redirect()->back()->with('status', 'The Ticket has been closed');
     }
 }

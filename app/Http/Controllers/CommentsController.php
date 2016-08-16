@@ -7,6 +7,7 @@ use App\Http\Requests;
 use App\User;
 use App\Ticket;
 use App\Comment;
+use Auth;
 
 class CommentsController extends Controller
 {
